@@ -20,6 +20,14 @@ def bspline_handler(u, p_list):
     return ret / 6
 
 
+def cohen_sutherland_encoder(x, y, x_min, y_min, x_max, y_max):
+    return ((y > y_max) << 3) + ((y < y_min) << 2) + ((x > x_max) << 1) + ((x < x_min) << 0)
+
+
+def cohen_sutherland_handler(x0, y0, x1, y1, x):
+    return [x, y0 + (y1 - y0) / (x1 - x0) * (x - x0)]
+
+
 def draw_line(p_list, algorithm):
     """绘制线段
 
@@ -240,4 +248,43 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    pass
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    if algorithm == 'Cohen-Sutherland':
+        while True:
+            code0 = cohen_sutherland_encoder(x0, y0, x_min, y_min, x_max, y_max)
+            code1 = cohen_sutherland_encoder(x1, y1, x_min, y_min, x_max, y_max)
+
+            if code0 & code1 != 0:
+                return []
+            elif code0 | code1 == 0:
+                return [[int(x0), int(y0)], [int(x1), int(y1)]]
+            else:
+                if code0 == 0:
+                    x0, y0, code0, x1, y1, code1 = x1, y1, code1, x0, y0, code0,
+                if (code0 >> 3) & 1:
+                    y0, x0 = cohen_sutherland_handler(y0, x0, y1, x1, y_max)
+                if (code0 >> 2) & 1:
+                    y0, x0 = cohen_sutherland_handler(y0, x0, y1, x1, y_min)
+                if (code0 >> 1) & 1:
+                    x0, y0 = cohen_sutherland_handler(x0, y0, x1, y1, x_max)
+                if (code0 >> 0) & 1:
+                    x0, y0 = cohen_sutherland_handler(x0, y0, x1, y1, x_min)
+
+    elif algorithm == 'Liang-Barsky':
+        dx = x1 - x0
+        dy = y1 - y0
+        p = [-dx, dx, -dy, dy]
+        q = [x0 - x_min, x_max - x0, y0 - y_min, y_max - y0]
+        u1, u2 = 0.0, 1.0
+        for i in range(4):
+            if p[i] == 0 and q[i] < 0:
+                return []
+            elif p[i] < 0: # outside to inside
+                u1 = max(u1, q[i] / p[i])
+            elif p[i] > 0: # inside to outside
+                u2 = min(u2, q[i] / p[i])
+            if u1 > u2:
+                return []
+        return [[int(x0 + u1 * dx), int(y0 + u1 * dy)],
+                [int(x0 + u2 * dx), int(y0 + u2 * dy)]]

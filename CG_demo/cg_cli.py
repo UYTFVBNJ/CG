@@ -35,9 +35,12 @@ if __name__ == '__main__':
                 canvas.fill(255)
                 for item_type, p_list, algorithm, color in item_dict.values():
                     if item_type == 'line':
-                        pixels = alg.draw_line(p_list, algorithm)
-                        for x, y in pixels:
-                            canvas[y, x] = color
+                        if len(p_list) != 0:
+                            pixels = alg.draw_line(p_list, algorithm)
+                            for x, y in pixels:
+                                canvas[y, x] = color
+                        else:
+                            print("Printing with empty p_list")
                     elif item_type == 'polygon':
                         pixels = alg.draw_polygon(p_list, algorithm)
                         for x, y in pixels:
@@ -102,6 +105,14 @@ if __name__ == '__main__':
                 y = int(line[3])
                 s = float(line[4])
                 item_dict[item_id][1] = alg.scale(item_dict[item_id][1], x, y, s)
+            elif line[0] == 'clip':
+                item_id = line[1]
+                x_min = int(line[2])
+                y_min = int(line[3])
+                x_max = int(line[4])
+                y_max = int(line[5])
+                algorithm = line[6]
+                item_dict[item_id][1] = alg.clip(item_dict[item_id][1], x_min, y_min, x_max, y_max, algorithm)
 
             line = fp.readline()
 
