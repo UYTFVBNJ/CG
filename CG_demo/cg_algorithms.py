@@ -56,6 +56,8 @@ def draw_line(p_list, algorithm):
             step = abs(dx)
         else:
             step = abs(dy)
+        if step == 0:
+            return result
         dx = dx / step
         dy = dy / step
         if abs(dx) == 1:

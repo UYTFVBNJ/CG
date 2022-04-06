@@ -41,6 +41,7 @@ if __name__ == '__main__':
                                 canvas[y, x] = color
                         else:
                             print("Printing with empty p_list")
+                            assert 0
                     elif item_type == 'polygon':
                         pixels = alg.draw_polygon(p_list, algorithm)
                         for x, y in pixels:
